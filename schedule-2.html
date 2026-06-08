@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Орлогын milestone</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&display=swap');
+
+  :root {
+    --bg: #0f0f0f;
+    --surface: #181818;
+    --border: #272727;
+    --accent: #00e5a0;
+    --accent2: #ffd166;
+    --text: #e8e8e8;
+    --muted: #555;
+    --rest: #ff6b6b;
+    --done-bg: #0a2e1f;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    min-height: 100vh;
+    padding: 28px 16px 48px;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  /* ── HEADER ── */
+  .header { text-align: center; margin-bottom: 28px; }
+  .header .eyebrow {
+    font-size: 10px; letter-spacing: 0.35em; color: var(--muted);
+    text-transform: uppercase; margin-bottom: 6px;
+  }
+  .header .big { font-size: 34px; font-weight: 700; color: var(--accent); letter-spacing: -0.02em; }
+  .header .meta { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  /* ── PROGRESS ── */
+  .prog-wrap { margin-bottom: 28px; }
+  .prog-labels {
+    display: flex; justify-content: space-between;
+    font-size: 11px; color: var(--muted); margin-bottom: 6px;
+  }
+  .prog-labels .earned { color: var(--accent); font-weight: 600; }
+  .prog-track {
+    height: 6px; background: var(--border); border-radius: 3px; overflow: hidden;
+    position: relative;
+  }
+  .prog-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 3px;
+    width: 0%;
+    transition: width 0.9s cubic-bezier(.4,0,.2,1);
+  }
+  .prog-pct {
+    text-align: center; font-size: 11px; color: var(--muted); margin-top: 6px;
+  }
+  .prog-pct span { color: var(--accent2); font-weight: 600; }
+
+  /* ── TODAY BANNER ── */
+  .today-banner {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent2);
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 22px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .today-banner .tval { color: var(--text); font-weight: 600; }
+
+  /* ── MILESTONE TRACK ── */
+  .track { position: relative; padding-left: 28px; }
+
+  .track-line {
+    position: absolute;
+    left: 7px; top: 12px; bottom: 12px;
+    width: 2px;
+    background: var(--border);
+    border-radius: 1px;
+  }
+
+  .track-line-fill {
+    position: absolute;
+    left: 7px; top: 12px;
+    width: 2px;
+    background: linear-gradient(180deg, var(--accent), var(--accent2));
+    border-radius: 1px;
+    height: 0%;
+    transition: height 1s cubic-bezier(.4,0,.2,1);
+  }
+
+  /* ── MILESTONE ITEM ── */
+  .mile {
+    position: relative;
+    margin-bottom: 6px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    transition: border-color 0.2s;
+    cursor: pointer;
+    user-select: none;
+  }
+  .mile:hover { border-color: #3a3a3a; }
+  .mile.done { background: var(--done-bg); border-color: #1a4030; }
+  .mile.today-block { border-color: var(--accent2); }
+  .mile.rest-block { opacity: 0.5; cursor: default; }
+
+  .mile-inner {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+  }
+
+  /* node dot */
+  .node {
+    position: absolute;
+    left: -23px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 7px;
+    transition: all 0.3s;
+    flex-shrink: 0;
+  }
+  .mile.done .node { background: var(--accent); border-color: var(--accent); color: #000; }
+  .mile.today-block .node { border-color: var(--accent2); box-shadow: 0 0 0 3px rgba(255,209,102,0.15); }
+  .mile.rest-block .node { background: #1a1a1a; border-color: #333; }
+
+  .mile-info { flex: 1; min-width: 0; }
+  .mile-title { font-size: 12px; font-weight: 600; color: var(--text); }
+  .mile.done .mile-title { color: var(--accent); }
+  .mile.rest-block .mile-title { color: var(--muted); }
+  .mile-date { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+  .mile-right { text-align: right; flex-shrink: 0; }
+  .mile-earn { font-size: 12px; font-weight: 600; color: var(--accent2); }
+  .mile-total { font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .mile.done .mile-total { color: var(--accent); }
+
+  /* check icon */
+  .check { font-size: 10px; }
+
+  /* today tag */
+  .tag-today {
+    font-size: 9px; background: var(--accent2); color: #000;
+    padding: 2px 5px; border-radius: 2px; font-weight: 700;
+    letter-spacing: 0.05em; margin-left: 6px; vertical-align: middle;
+  }
+
+  /* done tag */
+  .tag-done {
+    font-size: 9px; background: var(--accent); color: #000;
+    padding: 2px 5px; border-radius: 2px; font-weight: 700;
+    letter-spacing: 0.05em; margin-left: 6px; vertical-align: middle;
+  }
+
+  /* ── STATS ── */
+  .stats {
+    display: grid; grid-template-columns: repeat(3,1fr); gap: 10px;
+    margin-top: 24px;
+  }
+  .stat {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 14px 10px; text-align: center;
+  }
+  .stat-val { font-size: 20px; font-weight: 700; color: var(--accent); }
+  .stat-lbl { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 4px; }
+
+  /* ── RESET BTN ── */
+  .reset-wrap { text-align: center; margin-top: 20px; }
+  .reset-btn {
+    background: none; border: 1px solid var(--border);
+    color: var(--muted); font-family: inherit; font-size: 10px;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    padding: 7px 16px; border-radius: 4px; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .reset-btn:hover { border-color: var(--rest); color: var(--rest); }
+
+  /* animations */
+  @keyframes pop {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.04); }
+    100% { transform: scale(1); }
+  }
+  .mile.just-done { animation: pop 0.3s ease; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="eyebrow">Орлогын milestone tracker</div>
+  <div class="big" id="earned-big">0 ₮</div>
+  <div class="meta">6-р сарын 9 → 7-р сарын 11 · өдөрт 120,000 ₮</div>
+</div>
+
+<div class="prog-wrap">
+  <div class="prog-labels">
+    <span class="earned" id="prog-left">0 ₮</span>
+    <span>3,000,000 ₮</span>
+  </div>
+  <div class="prog-track">
+    <div class="prog-fill" id="prog-fill"></div>
+  </div>
+  <div class="prog-pct"><span id="prog-pct">0%</span> дууссан</div>
+</div>
+
+<div class="today-banner">
+  <span>Өнөөдөр</span>
+  <span class="tval" id="today-label">—</span>
+</div>
+
+<div class="track">
+  <div class="track-line"></div>
+  <div class="track-line-fill" id="track-fill"></div>
+  <div id="milestones"></div>
+</div>
+
+<div class="stats">
+  <div class="stat">
+    <div class="stat-val" id="s-done">0</div>
+    <div class="stat-lbl">Дууссан блок</div>
+  </div>
+  <div class="stat">
+    <div class="stat-val" id="s-days">0</div>
+    <div class="stat-lbl">Ажилсан өдөр</div>
+  </div>
+  <div class="stat">
+    <div class="stat-val" id="s-left">3,000,000</div>
+    <div class="stat-lbl">Үлдсэн ₮</div>
+  </div>
+</div>
+
+<div class="reset-wrap">
+  <button class="reset-btn" onclick="resetAll()">↺ Дахин эхлэх</button>
+</div>
+
+<script>
+const MILESTONES = [
+  { id:'b1', type:'work', label:'1-р блок', date:'6/9 – 6/13', earn:600000, total:600000, days:5 },
+  { id:'r1', type:'rest', label:'Амралт',   date:'6/14 – 6/15', earn:0,      total:null,  days:0 },
+  { id:'b2', type:'work', label:'2-р блок', date:'6/16 – 6/20', earn:600000, total:1200000, days:5 },
+  { id:'r2', type:'rest', label:'Амралт',   date:'6/21 – 6/22', earn:0,      total:null,  days:0 },
+  { id:'b3', type:'work', label:'3-р блок', date:'6/23 – 6/27', earn:600000, total:1800000, days:5 },
+  { id:'r3', type:'rest', label:'Амралт',   date:'6/28 – 6/29', earn:0,      total:null,  days:0 },
+  { id:'b4', type:'work', label:'4-р блок', date:'6/30 – 7/4',  earn:600000, total:2400000, days:5 },
+  { id:'r4', type:'rest', label:'Амралт',   date:'7/5 – 7/6',   earn:0,      total:null,  days:0 },
+  { id:'b5', type:'work', label:'5-р блок', date:'7/7 – 7/11',  earn:600000, total:3000000, days:5, final:true },
+];
+
+// today detection
+const TODAY_RANGES = {
+  b1: { start: new Date('2026-06-09'), end: new Date('2026-06-13') },
+  b2: { start: new Date('2026-06-16'), end: new Date('2026-06-20') },
+  b3: { start: new Date('2026-06-23'), end: new Date('2026-06-27') },
+  b4: { start: new Date('2026-06-30'), end: new Date('2026-07-04') },
+  b5: { start: new Date('2026-07-07'), end: new Date('2026-07-11') },
+  r1: { start: new Date('2026-06-14'), end: new Date('2026-06-15') },
+  r2: { start: new Date('2026-06-21'), end: new Date('2026-06-22') },
+  r3: { start: new Date('2026-06-28'), end: new Date('2026-06-29') },
+  r4: { start: new Date('2026-07-05'), end: new Date('2026-07-06') },
+};
+
+function loadState() {
+  try { return JSON.parse(localStorage.getItem('mile_state') || '{}'); } catch(e) { return {}; }
+}
+function saveState(s) {
+  try { localStorage.setItem('mile_state', JSON.stringify(s)); } catch(e) {}
+}
+
+let state = loadState();
+
+function fmt(n) {
+  return n.toLocaleString('mn-MN') + ' ₮';
+}
+
+function getTodayId() {
+  const now = new Date();
+  now.setHours(0,0,0,0);
+  for (const [id, range] of Object.entries(TODAY_RANGES)) {
+    const s = new Date(range.start); s.setHours(0,0,0,0);
+    const e = new Date(range.end); e.setHours(0,0,0,0);
+    if (now >= s && now <= e) return id;
+  }
+  return null;
+}
+
+function render() {
+  const container = document.getElementById('milestones');
+  container.innerHTML = '';
+  const todayId = getTodayId();
+
+  MILESTONES.forEach((m, i) => {
+    const isDone = !!state[m.id];
+    const isToday = m.id === todayId;
+    const isRest = m.type === 'rest';
+
+    const div = document.createElement('div');
+    div.className = 'mile' +
+      (isDone ? ' done' : '') +
+      (isToday && !isDone ? ' today-block' : '') +
+      (isRest ? ' rest-block' : '');
+    div.id = 'mile-' + m.id;
+
+    const todayTag = isToday && !isDone ? '<span class="tag-today">TODAY</span>' : '';
+    const doneTag = isDone && m.type === 'work' ? '<span class="tag-done">✓</span>' : '';
+
+    div.innerHTML = `
+      <div class="mile-inner">
+        <div class="node">${isDone ? '✓' : (isRest ? '—' : (i/2|0)+1)}</div>
+        <div class="mile-info">
+          <div class="mile-title">${m.label}${todayTag}${doneTag}</div>
+          <div class="mile-date">${m.date}${m.days ? ' · ' + m.days + ' өдөр' : ''}</div>
+        </div>
+        <div class="mile-right">
+          ${m.earn ? `<div class="mile-earn">+${fmt(m.earn)}</div>` : '<div class="mile-earn" style="color:var(--muted)">амралт</div>'}
+          ${m.total ? `<div class="mile-total">${fmt(m.total)}</div>` : ''}
+        </div>
+      </div>
+    `;
+
+    if (m.type === 'work') {
+      div.addEventListener('click', () => toggle(m.id, div));
+    }
+
+    container.appendChild(div);
+  });
+
+  updateStats();
+}
+
+function toggle(id, el) {
+  if (state[id]) {
+    delete state[id];
+  } else {
+    state[id] = true;
+    el.classList.add('just-done');
+    setTimeout(() => el.classList.remove('just-done'), 400);
+  }
+  saveState(state);
+  render();
+}
+
+function updateStats() {
+  const workBlocks = MILESTONES.filter(m => m.type === 'work');
+  const doneBlocks = workBlocks.filter(m => state[m.id]);
+  const earned = doneBlocks.reduce((s, m) => s + m.earn, 0);
+  const daysWorked = doneBlocks.reduce((s, m) => s + m.days, 0);
+  const pct = Math.round(earned / 3000000 * 100);
+
+  document.getElementById('earned-big').textContent = fmt(earned);
+  document.getElementById('prog-left').textContent = fmt(earned);
+  document.getElementById('prog-pct').textContent = pct + '%';
+  document.getElementById('s-done').textContent = doneBlocks.length;
+  document.getElementById('s-days').textContent = daysWorked;
+  document.getElementById('s-left').textContent = (3000000 - earned).toLocaleString('mn-MN');
+
+  setTimeout(() => {
+    document.getElementById('prog-fill').style.width = pct + '%';
+    // track line fill: ratio of done milestones to total
+    const totalItems = MILESTONES.length;
+    const doneIdx = MILESTONES.reduce((max, m, i) => state[m.id] ? i : max, -1);
+    const fillPct = totalItems > 1 ? Math.round((doneIdx + 1) / totalItems * 100) : 0;
+    document.getElementById('track-fill').style.height = fillPct + '%';
+  }, 100);
+
+  // today banner
+  const todayId = getTodayId();
+  const todayItem = MILESTONES.find(m => m.id === todayId);
+  const todayLabel = document.getElementById('today-label');
+  if (todayItem) {
+    todayLabel.textContent = todayItem.label + ' · ' + todayItem.date;
+  } else {
+    const now = new Date();
+    if (now < new Date('2026-06-09')) todayLabel.textContent = 'Эхлэхэд ' + Math.ceil((new Date('2026-06-09') - now)/86400000) + ' өдөр үлдсэн';
+    else if (now > new Date('2026-07-11')) todayLabel.textContent = '🎉 Зорилго биелсэн!';
+    else todayLabel.textContent = '—';
+  }
+}
+
+function resetAll() {
+  if (confirm('Бүх дэвшлийг устгах уу?')) {
+    state = {};
+    saveState(state);
+    render();
+  }
+}
+
+render();
+</script>
+</body>
+</html>
